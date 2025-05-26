@@ -1,4 +1,9 @@
 
+using Assessment_Backend.Data;
+using Assessment_Backend.Service.Interface;
+using Assessment_Backend.Service.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 namespace Assessment_Backend
 {
     public class Program
@@ -13,6 +18,20 @@ namespace Assessment_Backend
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped<ICartRepository, CartRepository>();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:5226")
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+            });
 
             var app = builder.Build();
 
@@ -24,7 +43,8 @@ namespace Assessment_Backend
             }
 
             app.UseAuthorization();
-
+            app.UseStaticFiles();
+            app.UseCors("AllowFrontend");
 
             app.MapControllers();
 

@@ -1,0 +1,52 @@
+﻿@model Assessment_Frontend.Models.Product
+
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<h2>Add Product</h2>
+
+<form asp-action="Add" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Price"></label>
+        <input asp-for="Price" class="form-control" type="number" step="0.01" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DiscountPercentage"></label>
+        <input asp-for="DiscountPercentage" class="form-control" type="number" />
+        <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DiscountStartDate"></label>
+        <input asp-for="DiscountStartDate" class="form-control" type="date" />
+        <span asp-validation-for="DiscountStartDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DiscountEndDate"></label>
+        <input asp-for="DiscountEndDate" class="form-control" type="date" />
+        <span asp-validation-for="DiscountEndDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label>Upload Product Image</label>
+        <input type="file" name="ImageFile" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Add Product</button>
+</form>

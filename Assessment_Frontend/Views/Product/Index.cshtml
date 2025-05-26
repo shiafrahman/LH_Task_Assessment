@@ -1,0 +1,179 @@
+﻿@model List<Assessment_Frontend.Models.Product>
+
+@{
+    ViewBag.Title = "Products";
+    var now = DateTime.Now;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">🛍️ Products</h2>
+        @* <a href="@Url.Action("Cart")" class="btn btn-outline-secondary position-relative"> *@
+        <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary position-relative" id="cartLink">
+            <i class="bi bi-cart-fill"></i> Cart
+            @* <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @ViewBag.CartCount ?? 0
+            </span> *@
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">
+            0
+            </span>
+        </a>
+    </div>
+
+    <form method="get" asp-action="Index" class="input-group mb-3">
+        <input type="text" name="search" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search product...">
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+        <a class="btn btn-success ms-2" href="@Url.Action("Add")">Add Product</a>
+    </form>
+
+    <div class="row">
+        @foreach (var product in Model)
+        {
+            var discountedPrice = product.Price;
+            bool isDiscounted = product.DiscountStartDate <= now && now <= product.DiscountEndDate;
+            if (isDiscounted)
+            {
+                discountedPrice = product.Price * (1 - product.DiscountPercentage.GetValueOrDefault() / 100.0m);
+            }
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="@product.ImagePath" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text">@product.Description</p>
+                        <p class="mb-1">
+                            @if (isDiscounted)
+                            {
+                                
+                                
+                                <span class="text-muted text-decoration-line-through">@string.Format("{0:C}", product.Price)</span>
+                                
+                                <span class="text-success fw-bold ms-2">@string.Format("{0:C}", discountedPrice)</span>
+                            }
+                            else
+                            {
+                               
+                                <span class="fw-bold">@string.Format("{0:C}", product.Price)</span>
+                            }
+                        </p>
+                        <form asp-action="AddToCart" method="post" class="mt-auto">
+                            <input type="hidden" name="productId" value="@product.Id" />
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                    <a class="page-link" href="?search=@ViewBag.SearchTerm&page=@i&pageSize=@ViewBag.PageSize">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
+@section Scripts {
+    <script>
+        // Function to update cart count
+        function updateCartCount() {
+            $.get('@Url.Action("GetCartCount", "Cart")', function(data) {
+                $('#cartCount').text(data.count);
+            });
+        }
+
+        // Update cart count on page load
+        $(document).ready(function() {
+            updateCartCount();
+        });
+
+        // Handle add to cart form submissions
+        $(document).on('submit', 'form[action*="AddToCart"]', function(e) {
+            e.preventDefault();
+            var form = $(this);
+
+            $.post(form.attr('action'), form.serialize(), function() {
+                updateCartCount();
+                // Optional: Show a toast notification
+                toastr.success('Item added to cart!');
+            });
+        });
+    </script>
+    }
+
+
+
+
+
+
+
+
+
+
+
+@* @model List<Assessment_Frontend.Models.Product>
+
+<h2>Products</h2>
+
+<form method="get" asp-action="Index">
+    <input type="text" name="search" value="@ViewBag.SearchTerm" placeholder="Search product..." />
+    <button type="submit">Search</button>
+</form>
+<a class="btn btn-primary" href="@Url.Action("Add")">Add Product</a>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Discounted Price</th>
+            <th>Image</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Name</td>
+                <td>@product.Description</td>
+                <td>@product.Price</td>
+                <td>
+                    @{
+                        var now = DateTime.Now;
+                        var discountedPrice = product.Price;
+                        if (product.DiscountStartDate <= now && now <= product.DiscountEndDate)
+                        {
+                            discountedPrice = product.Price * (1 - product.DiscountPercentage / 100.0m);
+                        }
+                    }
+                    @string.Format("{0:C}", discountedPrice)
+                </td>
+                <td>
+                    <img src="@product.ImagePath" alt="@product.Name" width="100" />
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<div>
+    @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+    {
+        <a href="?search=@ViewBag.SearchTerm&page=@i&pageSize=@ViewBag.PageSize">@i</a>
+
+    }
+</div>
+
+ *@
+
+
+
+

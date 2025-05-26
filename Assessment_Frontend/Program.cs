@@ -1,3 +1,5 @@
+using Assessment_Frontend.Services;
+
 namespace Assessment_Frontend
 {
     public class Program
@@ -8,6 +10,12 @@ namespace Assessment_Frontend
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddHttpClient<IApiService, ApiService>(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5087/");
+            });
+
+            builder.Services.AddSession();
 
             var app = builder.Build();
 
@@ -21,10 +29,11 @@ namespace Assessment_Frontend
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseSession();
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Product}/{action=Index}/{id?}");
 
             app.Run();
         }
