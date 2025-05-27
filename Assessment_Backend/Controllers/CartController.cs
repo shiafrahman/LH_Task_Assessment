@@ -71,7 +71,7 @@ namespace Assessment_Backend.Controllers
             if (product == null)
                 return BadRequest("Invalid Product ID");
 
-            // Check if cart item already exists for this product
+            
             var existingCart = await _cartRepository.GetByProductIdAsync(cartItem.ProductId);
             if (existingCart != null)
             {

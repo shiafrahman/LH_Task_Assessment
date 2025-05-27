@@ -37,10 +37,16 @@ namespace Assessment_Frontend.Controllers
             return View(products);
         }
 
-        public async Task<IActionResult> Add()
+        public async Task<IActionResult> Add(string search = "", int page = 1, int pageSize = 10)
         {
-            var productResponse = await _apiService.GetProducts("", 1, int.MaxValue);
+            //var productResponse = await _apiService.GetProducts("", 1, 10);
+            var productResponse = await _apiService.GetProducts(search, page, pageSize);
+            var totalPages = productResponse?.TotalPages ?? 0;
             ViewBag.Products = productResponse?.Products ?? new List<Product>();
+            ViewBag.TotalPages = totalPages;
+            ViewBag.CurrentPage = page;
+            ViewBag.SearchTerm = search;
+            ViewBag.PageSize = pageSize;
             ViewBag.CartCount = GetCartCount();
             
             return View();
