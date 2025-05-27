@@ -1,6 +1,7 @@
 ﻿using Assessment_Frontend.Models;
 using System.Text.Json;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace Assessment_Frontend.Services
 {
@@ -15,20 +16,27 @@ namespace Assessment_Frontend.Services
         public async Task<ProductResponse> GetProducts(string search, int page, int pageSize)
         {
             var response = await _client.GetFromJsonAsync<ProductResponse>($"api/products?search={search}&page={page}&pageSize={pageSize}");
-            return response;
+            return response ?? new ProductResponse();
         }
 
         public async Task AddToCart(int productId)
         {
-            var cartItem = new CartItem { ProductId = productId, Quantity = 1 };
+            var cartItem = new { ProductId = productId, Quantity = 1 };
             var content = new StringContent(JsonSerializer.Serialize(cartItem), Encoding.UTF8, "application/json");
-            await _client.PostAsync("api/cart/items", content);
+            var response = await _client.PostAsync("api/cart", content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public async Task<List<Cart>> GetCart()
+        public async Task DeleteCart(int productId)
         {
-            var response = await _client.GetFromJsonAsync<List<Cart>>("api/cart");
-            return response ?? new List<Cart>();
+            var response = await _client.DeleteAsync($"api/cart/{productId}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<CartResponse>> GetCart()
+        {
+            var response = await _client.GetFromJsonAsync<CartResponseWrapper>("api/cart");
+            return response?.Items ?? new List<CartResponse>();
         }
 
         public async Task AddProductAsync(Product productDto)
@@ -49,6 +57,12 @@ namespace Assessment_Frontend.Services
             if (productDto.Image != null)
             {
                 var streamContent = new StreamContent(productDto.Image.OpenReadStream());
+                streamContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "Image",
+                    FileName = productDto.Image.FileName
+                };
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(productDto.Image.ContentType);
                 form.Add(streamContent, "Image", productDto.Image.FileName);
             }
 

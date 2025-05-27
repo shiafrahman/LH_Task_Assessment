@@ -6,6 +6,7 @@ namespace Assessment_Backend.Service.Interface
     {
         Task<IEnumerable<Cart>> GetAllAsync();
         Task<Cart?> GetByIdAsync(int id);
+        Task<Cart?> GetByProductIdAsync(int productId);
         Task AddAsync(Cart cart);
         Task UpdateAsync(Cart cart);
         Task DeleteAsync(int id);

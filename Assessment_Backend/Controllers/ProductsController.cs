@@ -20,14 +20,15 @@ namespace Assessment_Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] string? search, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAll([FromQuery] string? search, int page , int pageSize)
         {
             var products = await _productRepository.GetAllAsync(search, page, pageSize);
             var totalPages = await _productRepository.GetTotalPages(search, pageSize);
             return Ok(new
             {
-                products,
-                totalPages
+                totalPages,
+                products
+                
             });
         }
 

@@ -16,10 +16,89 @@ namespace Assessment_Frontend.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        [HttpPost]
+        public async Task<IActionResult> AddToCart(int productId)
+        {
+            var cart = GetSessionCart();
+            var item = cart.FirstOrDefault(x => x.ProductId == productId);
+            if (item != null)
+                item.Quantity++;
+            else
+                cart.Add(new CartItem { ProductId = productId, Quantity = 1 });
+
+            SaveSessionCart(cart);
+
+
+            await _apiService.AddToCart(productId);
+
+            return RedirectToAction("Index");
+        }
+
+
+
+        public async Task<IActionResult> Index()
+        {
+            var cart = GetSessionCart();
+            List<CartResponse> cartItems;
+
+            try
+            {
+                
+                if (!cart.Any())
+                {
+                    var backendCart = await _apiService.GetCart();
+                    
+                    cart = backendCart.Select(c => new CartItem
+                    {
+                        ProductId = c.ProductId,
+                        Quantity = c.Quantity
+                    }).ToList();
+                    SaveSessionCart(cart); 
+                }
+
+                
+                var client = _httpClientFactory.CreateClient("API");
+                var response = await client.PostAsJsonAsync("api/Cart/items", cart);
+                response.EnsureSuccessStatusCode();
+                var result = await response.Content.ReadFromJsonAsync<CartResponseWrapper>();
+
+                cartItems = result?.Items ?? new List<CartResponse>();
+                ViewBag.Total = result?.Items.Sum(p => p.TotalPrice) ?? 0;
+                ViewBag.CartCount = result?.TotalCount ?? GetCartCount();
+            }
+            catch (HttpRequestException)
+            {
+                
+                ViewBag.ErrorMessage = "Unable to fetch cart items from the server. Displaying local cart data.";
+                cartItems = new List<CartResponse>();
+                ViewBag.Total = 0;
+                ViewBag.CartCount = GetCartCount();
+            }
+
+            return View(cartItems);
+        }
+
+        public IActionResult Remove(int productId)
+        {
+            var cart = GetSessionCart();
+            var item = cart.FirstOrDefault(x => x.ProductId == productId);
+            if (item != null)
+                cart.Remove(item);
+            SaveSessionCart(cart);
+             _apiService.DeleteCart(productId);
+            return RedirectToAction("Index");
+        }
+
         public async Task<IActionResult> Cart()
         {
-            var cartItems = await _apiService.GetCart();
-            return View(cartItems);
+            return RedirectToAction("Index"); 
+        }
+
+        private int GetCartCount()
+        {
+            var json = HttpContext.Session.GetString(SessionKey);
+            var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
+            return cart?.Sum(x => x.Quantity) ?? 0;
         }
 
         private List<CartItem> GetSessionCart()
@@ -31,45 +110,6 @@ namespace Assessment_Frontend.Controllers
         private void SaveSessionCart(List<CartItem> cart)
         {
             HttpContext.Session.SetString(SessionKey, JsonSerializer.Serialize(cart));
-        }
-
-        [HttpPost]
-        public IActionResult AddToCart(int productId)
-        {
-            var cart = GetSessionCart();
-            var item = cart.FirstOrDefault(x => x.ProductId == productId);
-            if (item != null) item.Quantity++;
-            else cart.Add(new CartItem { ProductId = productId, Quantity = 1 });
-            SaveSessionCart(cart);
-            return RedirectToAction("Index", "Product");
-        }
-
-        public async Task<IActionResult> Index()
-        {
-            var cart = GetSessionCart();
-            if (!cart.Any()) return View(new List<CartResponse>());
-
-            var client = _httpClientFactory.CreateClient("API");
-            var response = await client.PostAsJsonAsync("api/Cart/items", cart);
-            var products = await response.Content.ReadFromJsonAsync<List<CartResponse>>();
-
-            ViewBag.Total = products.Sum(p => p.TotalPrice);
-            return View(products);
-        }
-
-        public IActionResult Remove(int productId)
-        {
-            var cart = GetSessionCart();
-            var item = cart.FirstOrDefault(x => x.ProductId == productId);
-            if (item != null) cart.Remove(item);
-            SaveSessionCart(cart);
-            return RedirectToAction("Index");
-        }
-
-        public IActionResult GetCartCount()
-        {
-            var cart = GetSessionCart();
-            return Json(new { count = cart.Sum(item => item.Quantity) });
         }
     }
 }

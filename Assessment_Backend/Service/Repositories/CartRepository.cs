@@ -20,6 +20,10 @@ namespace Assessment_Backend.Service.Repositories
             await _context.Carts.Include(c => c.Product)
                                 .FirstOrDefaultAsync(c => c.Id == id);
 
+        public async Task<Cart?> GetByProductIdAsync(int productId) =>
+        await _context.Carts.Include(c => c.Product)
+                           .FirstOrDefaultAsync(c => c.ProductId == productId);
+
         public async Task AddAsync(Cart cart)
         {
             await _context.Carts.AddAsync(cart);

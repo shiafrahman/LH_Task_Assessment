@@ -2,6 +2,498 @@
 
 @{
     ViewData["Title"] = "Add Product";
+    var products = ViewBag.Products as List<Product> ?? new List<Product>();
+}
+
+<div class="container mt-4">
+   
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">🛍️ Add New Product</h2>
+        <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary position-relative">
+            <i class="bi bi-cart-fill"></i> Cart
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @(ViewBag.CartCount ?? 0)
+            </span>
+        </a>
+    </div>
+
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Product Details</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Add" method="post" enctype="multipart/form-data">
+                <div class="row">
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Name" class="form-label fw-bold"></label>
+                        <input asp-for="Name" class="form-control" placeholder="Enter product name" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Price" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
+                        </div>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="Description" class="form-label fw-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter product description"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiscountPercentage" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <input asp-for="DiscountPercentage" class="form-control" type="number" min="0" max="100" placeholder="0" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+                    </div>
+
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiscountStartDate" class="form-label fw-bold"></label>
+                        <input asp-for="DiscountStartDate" class="form-control" type="date" />
+                        <span asp-validation-for="DiscountStartDate" class="text-danger"></span>
+                    </div>
+
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiscountEndDate" class="form-label fw-bold"></label>
+                        <input asp-for="DiscountEndDate" class="form-control" type="date" />
+                        <span asp-validation-for="DiscountEndDate" class="text-danger"></span>
+                    </div>
+
+                   
+                    <div class="col-md-6 mb-3">
+                        <label for="ImageFile" class="form-label fw-bold">Upload Product Image</label>
+                        <input type="file" name="imageFile" id="imageFile" class="form-control" accept="image/jpeg,image/png,image/jpg" />
+                        <small class="form-text text-muted">Accepted formats: JPG, PNG, JPEG</small>
+                        <div id="image-preview" class="mt-2">
+                            <img id="productImagePreview" src="#" alt="Image Preview" class="hidden" style="max-width: 200px; max-height: 200px; border-radius: 5px;" />
+                        </div>
+                    </div>
+                </div>
+
+               
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="@Url.Action("Index", "Product")" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-success">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0">Product List</h4>
+        </div>
+        <div class="card-body">
+            @if (!products.Any())
+            {
+                <p class="text-muted">No products available.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Discount (%)</th>
+                                <th>Discount Period</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var product in products)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(product.ImagePath))
+                                        {
+                                            <img src="@product.ImagePath" alt="@product.Name" style="max-width: 50px; border-radius: 5px;" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No Image</span>
+                                        }
+                                    </td>
+                                    <td>@product.Name</td>
+                                    <td>@string.Format("{0:C}", product.Price)</td>
+                                    <td>@(product.DiscountPercentage?.ToString("0.##") ?? "0")%</td>
+                                    <td>
+                                        @if (product.DiscountStartDate.HasValue && product.DiscountEndDate.HasValue)
+                                        {
+                                            @product.DiscountStartDate.Value.ToString("MM/dd/yyyy") <text>-</text> @product.DiscountEndDate.Value.ToString("MM/dd/yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="@Url.Action("Update", "Product", new { id = product.Id })" class="btn btn-sm btn-outline-primary" title="Update">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger delete-product" data-id="@product.Id" title="Delete">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+           
+            $("form").validate({
+                errorClass: "text-danger",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid");
+                }
+            });
+
+            
+            $("#imageFile").change(function () {
+                const file = this.files[0];
+                const preview = $("#productImagePreview");
+
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        alert("Please upload a valid image file (JPG, PNG, JPEG).");
+                        this.value = '';
+                        preview.addClass("hidden").attr("src", "#");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.removeClass("hidden").attr("src", e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.addClass("hidden").attr("src", "#");
+                }
+            });
+
+           
+            $(".delete-product").click(function () {
+                const productId = $(this).data("id");
+                if (confirm("Are you sure you want to delete this product?")) {
+                    $.ajax({
+                        url: `http://localhost:5087/api/products/${productId}`,
+                        type: "DELETE",
+                        success: function () {
+                            alert("Product deleted successfully.");
+                            location.reload();
+                        },
+                        error: function () {
+                            alert("Failed to delete product. Please try again.");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
+
+
+<style>
+    .card {
+        border-radius: 10px;
+    }
+
+    .card-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .form-label {
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 5px;
+    }
+
+    .btn {
+        border-radius: 5px;
+        padding: 10px 20px;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    .btn-sm {
+        padding: 5px 10px;
+    }
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* @model Assessment_Frontend.Models.Product
+
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="container mt-4">
+    <!-- Header with Cart Icon -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">🛍️ Add New Product</h2>
+        <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary position-relative">
+            <i class="bi bi-cart-fill"></i> Cart
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @(ViewBag.CartCount ?? 0)
+            </span>
+        </a>
+    </div>
+
+    <!-- Card Layout for Form -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Product Details</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Add" method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <!-- Product Name -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Name" class="form-label fw-bold"></label>
+                        <input asp-for="Name" class="form-control" placeholder="Enter product name" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Price" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
+                        </div>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="Description" class="form-label fw-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter product description"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <!-- Discount Percentage -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiscountPercentage" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <input asp-for="DiscountPercentage" class="form-control" type="number" min="0" max="100" placeholder="0" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+                    </div>
+
+                    <!-- Discount Start Date -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiscountStartDate" class="form-label fw-bold"></label>
+                        <input asp-for="DiscountStartDate" class="form-control" type="date" />
+                        <span asp-validation-for="DiscountStartDate" class="text-danger"></span>
+                    </div>
+
+                    <!-- Discount End Date -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiscountEndDate" class="form-label fw-bold"></label>
+                        <input asp-for="DiscountEndDate" class="form-control" type="date" />
+                        <span asp-validation-for="DiscountEndDate" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image Upload with Preview -->
+                    <div class="col-md-6 mb-3">
+                        <label for="ImageFile" class="form-label fw-bold">Upload Product Image</label>
+                        <input type="file" name="imageFile" id="imageFile" class="form-control" accept="image/*" />
+                        <small class="form-text text-muted">Accepted formats: JPG, PNG, JPEG</small>
+                        <div id="image-preview" class="mt-2">
+                            <img id="productImagePreview" src="#" alt="Image Preview" class="hidden" style="max-width: 200px; max-height: 200px; border-radius: 5px;" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="@Url.Action("Index", "Product")" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-success">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Include jQuery and Validation Scripts -->
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Enable client-side validation
+            $("form").validate({
+                errorClass: "text-danger",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid");
+                }
+            });
+
+            // Image preview functionality
+            $("#imageFile").change(function () {
+                const file = this.files[0];
+                const preview = $("#productImagePreview");
+
+                if (file) {
+                    // Check if the file is an image
+                    if (!file.type.startsWith('image/')) {
+                        alert("Please upload a valid image file (JPG, PNG, JPEG).");
+                        this.value = ''; // Clear the input
+                        preview.addClass("hidden").attr("src", "#");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.removeClass("hidden").attr("src", e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Clear preview if no file is selected
+                    preview.addClass("hidden").attr("src", "#");
+                }
+            });
+        });
+    </script>
+}
+
+<!-- Custom CSS -->
+<style>
+    .card {
+        border-radius: 10px;
+    }
+
+    .card-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .form-label {
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 5px;
+    }
+
+    .btn {
+        border-radius: 5px;
+        padding: 10px 20px;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .hidden {
+        display: none;
+    }
+</style> *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* @model Assessment_Frontend.Models.Product
+
+@{
+    ViewData["Title"] = "Add Product";
 }
 
 <h2>Add Product</h2>
@@ -50,3 +542,4 @@
 
     <button type="submit" class="btn btn-success">Add Product</button>
 </form>
+ *@

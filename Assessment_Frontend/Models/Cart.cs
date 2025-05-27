@@ -27,4 +27,10 @@
         public decimal DiscountedPrice { get; set; }
         public decimal TotalPrice { get; set; }
     }
+
+    public class CartResponseWrapper
+    {
+        public List<CartResponse> Items { get; set; }
+        public int TotalCount { get; set; }
+    }
 }

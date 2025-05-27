@@ -8,14 +8,26 @@ namespace Assessment_Frontend
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddHttpClient("API", client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5087/");
+                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            });
+
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddHttpClient<IApiService, ApiService>(client =>
             {
                 client.BaseAddress = new Uri("http://localhost:5087/");
+                client.Timeout = TimeSpan.FromMinutes(60);
             });
 
-            builder.Services.AddSession();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
             var app = builder.Build();
 

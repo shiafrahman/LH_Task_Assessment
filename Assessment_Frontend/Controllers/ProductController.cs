@@ -17,7 +17,7 @@ namespace Assessment_Frontend.Controllers
             _apiService = apiService;
             _httpClient = httpClient;
         }
-       
+
 
         public async Task<IActionResult> Index(string search = "", int page = 1, int pageSize = 10)
         {
@@ -32,25 +32,17 @@ namespace Assessment_Frontend.Controllers
             ViewBag.CurrentPage = page;
             ViewBag.SearchTerm = search;
             ViewBag.PageSize = pageSize;
+            ViewBag.CartCount = GetCartCount();
 
             return View(products);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddToCart(int productId)
-        {
-            await _apiService.AddToCart(productId);
-
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return Json(new { success = true });
-            }
-
-            return RedirectToAction("Index", "Cart");
-        }
-
         public async Task<IActionResult> Add()
         {
+            var productResponse = await _apiService.GetProducts("", 1, int.MaxValue);
+            ViewBag.Products = productResponse?.Products ?? new List<Product>();
+            ViewBag.CartCount = GetCartCount();
+            
             return View();
         }
 
@@ -73,12 +65,20 @@ namespace Assessment_Frontend.Controllers
 
             
 
-            // Replace this with your actual API/service call
+            
             await _apiService.AddProductAsync(product);
 
             return RedirectToAction("Index");
         }
 
-        
+
+        private int GetCartCount()
+        {
+            var json = HttpContext.Session.GetString("CartItems");
+            var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
+            return cart?.Sum(x => x.Quantity) ?? 0;
+        }
+
+
     }
 }
