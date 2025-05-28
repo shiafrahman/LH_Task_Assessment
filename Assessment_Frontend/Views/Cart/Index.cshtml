@@ -10,14 +10,19 @@
         <a href="@Url.Action("Index", "Product")" class="btn btn-outline-secondary">Continue Shopping</a>
     </div>
 
-    @if (!Model.Any())
+     <div id="cart-content">
+         @if (!Model.Any())
     {
-        <p>Your cart is empty.</p>
-        <a href="@Url.Action("Index", "Product")" class="btn btn-primary">Shop Now</a>
+        <div id="empty-cart">
+            <p>Your cart is empty.</p>
+            <a href="@Url.Action("Index", "Product")" class="btn btn-primary">Shop Now</a>
+        </div>
+       
     }
     else
     {
-        <table class="table table-striped">
+        <div id="cart-items">
+            <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Image</th>
@@ -39,14 +44,66 @@
                         <td>@item.Price.ToString("C")</td>
                         <td>@item.DiscountedPrice.ToString("C")</td>
                         <td>@item.TotalPrice.ToString("C")</td>
-                        <td>
+                        @* <td>
                             <a href="@Url.Action("Remove", "Cart", new { productId = item.ProductId })" class="btn btn-danger">Remove</a>
+                        </td> *@
+                        <td>
+                            <button onclick="removeFromCart(@item.ProductId, this)" class="btn btn-danger">Remove</button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
         <h4>Total: @ViewBag.Total.ToString("C")</h4>
-        <button class="btn btn-success">Proceed to Checkout</button>
+        <button class="btn btn-success hhh">Proceed to Checkout</button>
+        </div>
+        
     }
+ </div>
 </div>
+
+    
+
+@section Scripts {
+    <script>
+        function removeFromCart(productId, row) {
+            $.ajax({
+                url: '@Url.Action("Remove", "Cart")',
+                type: 'POST',
+                data: { productId: productId },
+                success: function () {
+                    $(row).closest('tr').remove();
+                    updateCartTotal();
+                    
+                    
+                    if ($('tbody tr').length === 0) {
+                       
+                        $('#cart-items').remove();
+                        $('#cart-content').append(`
+                            <div id="empty-cart">
+                                <p>Your cart is empty.</p>
+                                <a href="@Url.Action("Index", "Product")" class="btn btn-primary">Shop Now</a>
+                            </div>
+                        `);
+                    }
+                },
+                error: function () {
+                    alert("Error removing item from cart.");
+                }
+            });
+        }
+
+        function updateCartTotal() {
+            $.ajax({
+                url: '@Url.Action("GetCartTotal", "Cart")',
+                type: 'GET',
+                success: function (total) {
+                    $('h4').text('Total: ' + total);
+                    if (total === 0 && $('tbody tr').length === 0) {
+                        $('.hhh').remove();
+                    }
+                }
+            });
+        }
+    </script>
+}

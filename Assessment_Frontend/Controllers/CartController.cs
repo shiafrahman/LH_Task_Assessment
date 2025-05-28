@@ -64,7 +64,7 @@ namespace Assessment_Frontend.Controllers
 
                 cartItems = result?.Items ?? new List<CartResponse>();
                 ViewBag.Total = result?.Items.Sum(p => p.TotalPrice) ?? 0;
-                ViewBag.CartCount = result?.TotalCount ?? GetCartCount();
+                //ViewBag.CartCount = result?.TotalCount ?? GetCartCount();
             }
             catch (HttpRequestException)
             {
@@ -72,34 +72,59 @@ namespace Assessment_Frontend.Controllers
                 ViewBag.ErrorMessage = "Unable to fetch cart items from the server. Displaying local cart data.";
                 cartItems = new List<CartResponse>();
                 ViewBag.Total = 0;
-                ViewBag.CartCount = GetCartCount();
+                //ViewBag.CartCount = GetCartCount();
             }
 
             return View(cartItems);
         }
 
-        public IActionResult Remove(int productId)
+        //public IActionResult Remove(int productId)
+        //{
+        //    var cart = GetSessionCart();
+        //    var item = cart.FirstOrDefault(x => x.ProductId == productId);
+        //    if (item != null)
+        //        cart.Remove(item);
+        //    SaveSessionCart(cart);
+        //    _apiService.DeleteCart(productId);
+        //    return RedirectToAction("Index");
+        //}
+
+        [HttpPost]
+        public async Task<IActionResult> Remove(int productId)
         {
             var cart = GetSessionCart();
             var item = cart.FirstOrDefault(x => x.ProductId == productId);
             if (item != null)
+            {
                 cart.Remove(item);
-            SaveSessionCart(cart);
-             _apiService.DeleteCart(productId);
-            return RedirectToAction("Index");
+                SaveSessionCart(cart);
+                await _apiService.DeleteCart(productId);
+                return Json(new { success = true });
+            }
+            return Json(new { success = false, message = "Item not found" });
         }
+
+
 
         public async Task<IActionResult> Cart()
         {
             return RedirectToAction("Index"); 
         }
 
-        private int GetCartCount()
+
+        public IActionResult GetCartTotal()
         {
-            var json = HttpContext.Session.GetString(SessionKey);
-            var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
-            return cart?.Sum(x => x.Quantity) ?? 0;
+            var cart = GetSessionCart();
+            var total = cart.Sum(item => item.Quantity * item.DiscountedPrice);
+            return Json(total.ToString("C"));
         }
+
+        //private int GetCartCount()
+        //{
+        //    var json = HttpContext.Session.GetString(SessionKey);
+        //    var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
+        //    return cart?.Sum(x => x.Quantity) ?? 0;
+        //}
 
         private List<CartItem> GetSessionCart()
         {

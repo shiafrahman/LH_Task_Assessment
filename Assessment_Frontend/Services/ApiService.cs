@@ -19,6 +19,18 @@ namespace Assessment_Frontend.Services
             return response ?? new ProductResponse();
         }
 
+        public async Task<Product> GetProductById(int id)
+        {
+            try
+            {
+                return await _client.GetFromJsonAsync<Product>($"api/products/{id}");
+            }
+            catch (HttpRequestException)
+            {
+                return null;
+            }
+        }
+
         public async Task AddToCart(int productId)
         {
             var cartItem = new { ProductId = productId, Quantity = 1 };
@@ -75,6 +87,51 @@ namespace Assessment_Frontend.Services
             }
 
             response.EnsureSuccessStatusCode();
+        }
+
+        public async Task UpdateProductAsync(Product productDto)
+        {
+            var form = new MultipartFormDataContent();
+
+            form.Add(new StringContent(productDto.Id.ToString()), "Id");
+            form.Add(new StringContent(productDto.Name ?? ""), "Name");
+            form.Add(new StringContent(productDto.Description ?? ""), "Description");
+            form.Add(new StringContent(productDto.Price.ToString()), "Price");
+            form.Add(new StringContent(productDto.DiscountPercentage?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0"), "DiscountPercentage");
+
+            if (productDto.DiscountStartDate.HasValue)
+                form.Add(new StringContent(productDto.DiscountStartDate.Value.ToString("o")), "DiscountStartDate");
+
+            if (productDto.DiscountEndDate.HasValue)
+                form.Add(new StringContent(productDto.DiscountEndDate.Value.ToString("o")), "DiscountEndDate");
+
+            if (productDto.Image != null)
+            {
+                var streamContent = new StreamContent(productDto.Image.OpenReadStream());
+                streamContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "Image",
+                    FileName = productDto.Image.FileName
+                };
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(productDto.Image.ContentType);
+                form.Add(streamContent, "Image", productDto.Image.FileName);
+            }
+
+            var response = await _client.PutAsync($"api/products/{productDto.Id}", form);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteProductAsync(int id)
+        {
+            try
+            {
+                var response = await _client.DeleteAsync($"api/products/{id}");
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Failed to delete product: {ex.Message}");
+            }
         }
 
     }

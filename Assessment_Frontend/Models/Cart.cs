@@ -5,10 +5,12 @@
     {
         public int ProductId { get; set; }
         public int Quantity { get; set; }
+        public decimal DiscountedPrice { get; set; }
     }
 
     public class CartResponse
     {
+        public int Id { get; set; }
         public int ProductId { get; set; }
         public string Name { get; set; }
         public string? ImagePath { get; set; }

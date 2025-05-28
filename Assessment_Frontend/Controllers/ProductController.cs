@@ -77,6 +77,40 @@ namespace Assessment_Frontend.Controllers
             return RedirectToAction("Index");
         }
 
+        public async Task<IActionResult> Update(int id)
+        {
+            var productResponse = await _apiService.GetProductById(id);
+            if (productResponse == null)
+                return NotFound();
+
+            ViewBag.CartCount = GetCartCount();
+            return View(productResponse);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Update(int id, Product product, IFormFile ImageFile)
+        {
+            if (id != product.Id)
+                return BadRequest();
+
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                var fileName = Path.GetFileName(ImageFile.FileName);
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/ProductImages", fileName);
+                product.Image = ImageFile;
+
+                using (var stream = new FileStream(imagePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(stream);
+                }
+
+                product.ImagePath = "/ProductImages/" + fileName;
+            }
+
+            await _apiService.UpdateProductAsync(product);
+            return RedirectToAction("Add");
+        }
+
 
         private int GetCartCount()
         {

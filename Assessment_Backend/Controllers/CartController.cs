@@ -120,7 +120,7 @@ namespace Assessment_Backend.Controllers
             if (cart == null)
                 return NotFound();
 
-            await _cartRepository.DeleteAsync(id);
+            await _cartRepository.DeleteAsync(cart.Id);
             return NoContent();
         }
 

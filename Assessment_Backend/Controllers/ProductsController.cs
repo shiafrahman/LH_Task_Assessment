@@ -32,6 +32,19 @@ namespace Assessment_Backend.Controllers
             });
         }
 
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return NotFound();
+
+            return Ok(product);
+        }
+
+
+
         [HttpPost]
         public async Task<IActionResult> Add([FromForm] ProductDto dto)
         {
@@ -62,6 +75,50 @@ namespace Assessment_Backend.Controllers
 
             await _productRepository.AddAsync(product);
             return Ok(product);
+        }
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromForm] ProductDto productDto)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return NotFound();
+
+            product.Name = productDto.Name;
+            product.Description = productDto.Description;
+            product.Price = productDto.Price;
+            product.DiscountPercentage = productDto.DiscountPercentage;
+            product.DiscountStartDate = productDto.DiscountStartDate;
+            product.DiscountEndDate = productDto.DiscountEndDate;
+
+            if (productDto.Image != null)
+            {
+                var fileName = Path.GetFileName(productDto.Image.FileName);
+                var imagePath = Path.Combine("wwwroot/ProductImages", fileName);
+                var dbPath = $"/ProductImages/{fileName}";
+
+                using (var stream = new FileStream(imagePath, FileMode.Create))
+                {
+                    await productDto.Image.CopyToAsync(stream);
+                }
+
+                product.ImagePath = dbPath;
+            }
+
+            await _productRepository.UpdateAsync(product);
+            return Ok(product);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return NotFound();
+
+            await _productRepository.DeleteAsync(id);
+            return NoContent();
         }
     }
 }
