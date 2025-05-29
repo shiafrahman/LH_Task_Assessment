@@ -114,23 +114,6 @@ namespace Assessment_Frontend.Controllers
 
 
 
-        //private int GetCartCount()
-        //{
-        //    var json = HttpContext.Session.GetString("CartItems");
-        //    var cart = new List<CartResponse>();
-        //    if (json == null)
-        //    {
-        //        var carts = _apiService.GetCart();
-        //        cart = string.IsNullOrEmpty(json) ? new List<CartResponse>() : JsonSerializer.Deserialize<List<CartResponse>>(carts);
-
-        //    }
-        //    else
-        //    {
-        //        cart = string.IsNullOrEmpty(json) ? new List<CartResponse>() : JsonSerializer.Deserialize<List<CartResponse>>(json);
-        //    }
-
-        //    return cart?.Sum(x => x.Quantity) ?? 0;
-        //}
 
         [HttpGet]
         public IActionResult GetCartCount()

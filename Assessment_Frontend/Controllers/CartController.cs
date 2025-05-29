@@ -64,7 +64,7 @@ namespace Assessment_Frontend.Controllers
 
                 cartItems = result?.Items ?? new List<CartResponse>();
                 ViewBag.Total = result?.Items.Sum(p => p.TotalPrice) ?? 0;
-                ViewBag.CartCount = result?.TotalCount ?? GetCartCount();
+               
             }
             catch (HttpRequestException)
             {
@@ -72,22 +72,12 @@ namespace Assessment_Frontend.Controllers
                 ViewBag.ErrorMessage = "Unable to fetch cart items from the server. Displaying local cart data.";
                 cartItems = new List<CartResponse>();
                 ViewBag.Total = 0;
-                ViewBag.CartCount = GetCartCount();
+                
             }
 
             return View(cartItems);
         }
 
-        //public IActionResult Remove(int productId)
-        //{
-        //    var cart = GetSessionCart();
-        //    var item = cart.FirstOrDefault(x => x.ProductId == productId);
-        //    if (item != null)
-        //        cart.Remove(item);
-        //    SaveSessionCart(cart);
-        //    _apiService.DeleteCart(productId);
-        //    return RedirectToAction("Index");
-        //}
 
         [HttpPost]
         public async Task<IActionResult> Remove(int productId)
@@ -119,11 +109,14 @@ namespace Assessment_Frontend.Controllers
             return Json(total.ToString("C"));
         }
 
-        private int GetCartCount()
+        public IActionResult GetCartCount()
         {
-            var json = HttpContext.Session.GetString(SessionKey);
-            var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
-            return cart?.Sum(x => x.Quantity) ?? 0;
+            var json = HttpContext.Session.GetString("CartItems");
+            var cart = string.IsNullOrEmpty(json)
+                ? new List<CartResponse>()
+                : JsonSerializer.Deserialize<List<CartResponse>>(json);
+
+            return Json(new { count = cart.Sum(x => x.Quantity) });
         }
 
         private List<CartItem> GetSessionCart()
