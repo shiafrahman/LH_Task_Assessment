@@ -10,8 +10,10 @@
         <h2 class="mb-0">🛍️ Products</h2>
         <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary position-relative" id="cartLink">
             <i class="bi bi-cart-fill"></i> Cart
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                 @(ViewBag.CartCount ?? 0)
+               
+                <span class="visually-hidden">items in cart</span>
             </span>
         </a>
     </div>
@@ -82,7 +84,7 @@
         function updateCartCount() {
             $.get('@Url.Action("GetCartCount", "Cart")', function(data) {
                 $('#cartCount').text(data.count);
-                document.window.reload();
+                //document.window.reload();
             });
         }
 

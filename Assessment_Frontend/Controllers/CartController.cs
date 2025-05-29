@@ -64,7 +64,7 @@ namespace Assessment_Frontend.Controllers
 
                 cartItems = result?.Items ?? new List<CartResponse>();
                 ViewBag.Total = result?.Items.Sum(p => p.TotalPrice) ?? 0;
-                //ViewBag.CartCount = result?.TotalCount ?? GetCartCount();
+                ViewBag.CartCount = result?.TotalCount ?? GetCartCount();
             }
             catch (HttpRequestException)
             {
@@ -72,7 +72,7 @@ namespace Assessment_Frontend.Controllers
                 ViewBag.ErrorMessage = "Unable to fetch cart items from the server. Displaying local cart data.";
                 cartItems = new List<CartResponse>();
                 ViewBag.Total = 0;
-                //ViewBag.CartCount = GetCartCount();
+                ViewBag.CartCount = GetCartCount();
             }
 
             return View(cartItems);
@@ -119,12 +119,12 @@ namespace Assessment_Frontend.Controllers
             return Json(total.ToString("C"));
         }
 
-        //private int GetCartCount()
-        //{
-        //    var json = HttpContext.Session.GetString(SessionKey);
-        //    var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
-        //    return cart?.Sum(x => x.Quantity) ?? 0;
-        //}
+        private int GetCartCount()
+        {
+            var json = HttpContext.Session.GetString(SessionKey);
+            var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
+            return cart?.Sum(x => x.Quantity) ?? 0;
+        }
 
         private List<CartItem> GetSessionCart()
         {

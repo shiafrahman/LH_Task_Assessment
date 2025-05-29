@@ -8,7 +8,7 @@ using Assessment_Frontend.Models;
 namespace Assessment_Frontend.Controllers
 {
     public class ProductController : Controller
-    {
+    { 
         private readonly IApiService _apiService;
         private readonly HttpClient _httpClient;
 
@@ -32,7 +32,7 @@ namespace Assessment_Frontend.Controllers
             ViewBag.CurrentPage = page;
             ViewBag.SearchTerm = search;
             ViewBag.PageSize = pageSize;
-            ViewBag.CartCount = GetCartCount();
+            ViewBag.CartCount =  GetCartCount();
 
             return View(products);
         }
@@ -47,7 +47,7 @@ namespace Assessment_Frontend.Controllers
             ViewBag.CurrentPage = page;
             ViewBag.SearchTerm = search;
             ViewBag.PageSize = pageSize;
-            ViewBag.CartCount = GetCartCount();
+            ViewBag.CartCount =  GetCartCount();
             
             return View();
         }
@@ -83,7 +83,7 @@ namespace Assessment_Frontend.Controllers
             if (productResponse == null)
                 return NotFound();
 
-            ViewBag.CartCount = GetCartCount();
+            ViewBag.CartCount =  GetCartCount();
             return View(productResponse);
         }
 
@@ -112,13 +112,35 @@ namespace Assessment_Frontend.Controllers
         }
 
 
-        private int GetCartCount()
+
+
+        //private int GetCartCount()
+        //{
+        //    var json = HttpContext.Session.GetString("CartItems");
+        //    var cart = new List<CartResponse>();
+        //    if (json == null)
+        //    {
+        //        var carts = _apiService.GetCart();
+        //        cart = string.IsNullOrEmpty(json) ? new List<CartResponse>() : JsonSerializer.Deserialize<List<CartResponse>>(carts);
+
+        //    }
+        //    else
+        //    {
+        //        cart = string.IsNullOrEmpty(json) ? new List<CartResponse>() : JsonSerializer.Deserialize<List<CartResponse>>(json);
+        //    }
+
+        //    return cart?.Sum(x => x.Quantity) ?? 0;
+        //}
+
+        [HttpGet]
+        public IActionResult GetCartCount()
         {
             var json = HttpContext.Session.GetString("CartItems");
-            var cart = string.IsNullOrEmpty(json) ? new List<CartItem>() : JsonSerializer.Deserialize<List<CartItem>>(json);
-            return cart?.Sum(x => x.Quantity) ?? 0;
+            var cart = string.IsNullOrEmpty(json)
+                ? new List<CartResponse>()
+                : JsonSerializer.Deserialize<List<CartResponse>>(json);
+
+            return Json(new { count = cart.Sum(x => x.Quantity) });
         }
-
-
     }
 }

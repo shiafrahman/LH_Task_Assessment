@@ -17,7 +17,7 @@ namespace Assessment_Frontend.Services
         {
             var response = await _client.GetFromJsonAsync<ProductResponse>($"api/products?search={search}&page={page}&pageSize={pageSize}");
             return response ?? new ProductResponse();
-        }
+         }
 
         public async Task<Product> GetProductById(int id)
         {
