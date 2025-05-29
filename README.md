@@ -63,11 +63,13 @@ Update your connection string in appsettings.json (Backend project), then run in
 
 ### Author
 Md. Shiafur Rahman
+
 Software Engineer – Mediasoft Data System Limited
+
 Email: shiafrahman@gmail.com
 
 
 
 
 
-- SQL database with Entity Framework Core
+
